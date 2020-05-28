@@ -1,8 +1,39 @@
 import random
+import re
 from fabric.contrib.files import append, exists
-from fabric.api import cd, env, local, run
+from fabric.api import cd, env, local, run, hosts
 
 REPO_URL = 'https://github.com/yamen225/ObeyTheTestingGoat'
+
+
+@hosts(['superlists-staging.ottg.eu'])
+def get_vagrant_staging_connection():
+    local('cd ~/vag_OTG_stg; vagrant up')
+    result = local('cd ~/vag_OTG_stg; vagrant ssh-config',
+                   capture=True)
+    hostname = re.findall(r'HostName\s+([^\n]+)', result)[0]
+    port = re.findall(r'Port\s+([^\n]+)', result)[0]
+    env.hosts = ['%s:%s' % (hostname, port)]
+    env.user = re.findall(r'User\s+([^\n]+)', result)[0]
+    env.key_filename = re.findall(
+        r'IdentityFile\s+([^\n]+)', result)[0].lstrip("\"").rstrip("\"")
+    deploy()
+    # _restart_stg_services()
+
+
+@hosts(['superlists.ottg.eu'])
+def get_vagrant_production_connection():
+    local('cd ~/vag_OTG_stg; vagrant up')
+    result = local('cd ~/vag_OTG_stg; vagrant ssh-config',
+                   capture=True)
+    hostname = re.findall(r'HostName\s+([^\n]+)', result)[0]
+    port = re.findall(r'Port\s+([^\n]+)', result)[0]
+    env.hosts = ['%s:%s' % (hostname, port)]
+    env.user = re.findall(r'User\s+([^\n]+)', result)[0]
+    env.key_filename = re.findall(
+        r'IdentityFile\s+([^\n]+)', result)[0].lstrip("\"").rstrip("\"")
+    deploy()
+    # _restart_prod_services()
 
 
 def deploy():
