@@ -32,7 +32,16 @@ else:
 
     ALLOWED_HOSTS = ['*']
 
-
+# EMAIL CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'yamnrft35@gmail.com'
+# EMAIL_HOST_PASSWORD = 'TPapp@4918'
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# END EMAIL CONFIGURATION
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,6 +52,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'lists',
+    'accounts',
+]
+
+AUTH_USER_MODEL = 'accounts.User'
+AUTHENTICATION_BACKENDS = [
+    'accounts.authentication.PasswordlessAuthenticateBackend',
 ]
 
 MIDDLEWARE = [
