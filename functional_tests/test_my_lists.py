@@ -7,7 +7,7 @@ class MyListtest(FunctionalTest):
 
     def create_pre_authenticated_session(self, email):
         if self.staging_server:
-            session_key = create_session_on_server(sel.staging_server, email)
+            session_key = create_session_on_server(self.staging_server, email)
         else:
             session_key = create_pre_authenticated_session(email)
         # to set a cookie we need to first visit the domain.
@@ -28,3 +28,47 @@ class MyListtest(FunctionalTest):
         self.create_pre_authenticated_session(email=email)
         self.browser.get(self.live_server_url)
         self.wait_to_be_logged_in(email=email)
+
+        # She goes to the home page and starts a list
+        self.browser.get(self.live_server_url)
+        self.add_list_item('Reticulate splines')
+        self.add_list_item('Immentize eschaton')
+        first_list_url = self.browser.current_url
+
+        # She notices a "My lists" link, for the first time
+        self.browser.find_element_by_link_text('My lists').click()
+
+        # she sees that her list is in there, named according to this
+        # first list item
+        self.wait_for(
+            lambda: self.browser.find_element_by_link_text(
+                'Reticulate splines')
+        )
+        self.browser.find_element_by_link_text('Reticulate splines').click()
+        self.wait_for(
+            lambda: self.assertEqual(self.browser.current_url, first_list_url)
+        )
+
+        # She decides to start another list, just to see
+        self.browser.get(self.live_server_url)
+        self.add_list_item('Click cows')
+        second_list_url = self.browser.current_url
+
+        # Under "my lists", her new list appears
+        self.browser.find_element_by_link_text('My lists').click()
+        self.wait_for(
+            lambda: self.browser.find_element_by_link_text('Click cows')
+        )
+        self.browser.find_element_by_link_text('Click cows').click()
+        self.wait_for(
+            lambda: self.assertEqual(self.browser.current_url, second_list_url)
+        )
+
+        # she logs out. The "My list" option disappears
+        self.browser.find_element_by_link_text('Log out').click()
+        self.wait_for(
+            lambda: self.assertEqual(
+                self.brwoser.find_element_by_link_text('My lists'),
+                []
+            )
+        )

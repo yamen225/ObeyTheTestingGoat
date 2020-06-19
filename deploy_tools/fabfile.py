@@ -1,9 +1,23 @@
 import random
 import re
+import os
 from fabric.contrib.files import append, exists
 from fabric.api import cd, env, local, run, hosts
 
 REPO_URL = 'https://github.com/yamen225/ObeyTheTestingGoat'
+
+
+def _get_vagrant_instance_connection_data(fn, *args, **kwargs):
+    local('cd ~/vag_OTG_stg; vagrant up')
+    result = local('cd ~/vag_OTG_stg; vagrant ssh-config',
+                   capture=True)
+    hostname = re.findall(r'HostName\s+([^\n]+)', result)[0]
+    port = re.findall(r'Port\s+([^\n]+)', result)[0]
+    env.hosts = ['%s:%s' % (hostname, port)]
+    env.user = re.findall(r'User\s+([^\n]+)', result)[0]
+    env.key_filename = re.findall(
+        r'IdentityFile\s+([^\n]+)', result)[0].lstrip("\"").rstrip("\"")
+    fn()
 
 
 @hosts(['superlists-staging.ottg.eu'])
@@ -71,7 +85,8 @@ def _create_or_update_dotenv():
             'abcdefghijklmnopqrstuvwxyz0123456789', k=50
         ))
         append('.env', f'DJANGO_SECRET_KEY={new_secret}')
-
+    email_password = os.environ['EMAIL_PASSWORD']
+    append('.env', f'EMAIL_PASSWORD={email_password}')
 
 def _update_static_files():
     run('./virtualenv/bin/python manage.py collectstatic --noinput')
